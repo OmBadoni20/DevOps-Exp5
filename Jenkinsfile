@@ -13,7 +13,7 @@ pipeline {
             steps {
                 bat '''
                     cd react-app
-                    npm ci
+                    npm install
                 '''
             }
         }
@@ -24,7 +24,7 @@ pipeline {
                     if exist venv rmdir /s /q venv
                     python -m venv venv
                     venv\\Scripts\\python.exe -m pip install --upgrade pip
-                    venv\\Scripts\\python.exe -m pip install selenium pytest
+                    venv\\Scripts\\python.exe -m pip install -r requirements.txt
                 '''
             }
         }
@@ -33,8 +33,8 @@ pipeline {
             steps {
                 bat '''
                     cd react-app
-                    start /B cmd /c "npm start > react.log 2>&1"
-                    timeout /t 15 /nobreak
+                    start "" /B cmd /c "npm start > react.log 2>&1"
+                    ping 127.0.0.1 -n 16 > nul
                 '''
             }
         }
@@ -42,7 +42,8 @@ pipeline {
         stage('Run Selenium Tests') {
             steps {
                 bat '''
-                    venv\\Scripts\\python.exe -m pytest tests/ -v
+                    if not exist reports mkdir reports
+                    venv\\Scripts\\python.exe -m pytest tests/ -v --junitxml=reports/junit-report.xml
                 '''
             }
         }
@@ -50,15 +51,8 @@ pipeline {
 
     post {
         always {
+            junit testResults: 'reports/junit-report.xml', allowEmptyResults: true
             echo 'Jenkins pipeline execution completed.'
-        }
-
-        success {
-            echo 'React Selenium tests passed successfully.'
-        }
-
-        failure {
-            echo 'React Selenium tests failed.'
         }
     }
 }
