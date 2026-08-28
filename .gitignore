@@ -1,0 +1,6 @@
+﻿venv/
+__pycache__/
+.pytest_cache/
+reports/
+react-app/node_modules/
+react-app/build/
